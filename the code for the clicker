@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Epic Clicker Ultimate</title>
+<style>
+  body { font-family: Arial, sans-serif; text-align: center; background: #111; color: #fff; }
+  #game { max-width: 600px; margin: 40px auto; padding: 20px; background: #222; border-radius: 15px; }
+  #clickBtn { width: 200px; height: 200px; font-size: 50px; cursor: pointer; border-radius: 50%; background: gold; }
+  #clickBtn:active { transform: scale(0.95); }
+  .upgrade { margin: 10px; padding: 10px; background: #333; border-radius: 8px; display: inline-block; width: 45%; }
+  .locked { opacity: 0.5; }
+</style>
+</head>
+<body>
+<div id="game">
+  <h1>Epic Clicker Ultimate</h1>
+  <p>Clicks: <span id="clicks">0</span> | CPS: <span id="cps">0</span></p>
+  <button id="clickBtn" onclick="click()">CLICK ME!</button><br><br>
+
+  <h2>Upgrades</h2>
+  <div class="upgrade" id="up1">
+    <strong>Double Clicks</strong><br>Cost: <span id="cost1">100</span><br>
+    <button onclick="buy(1)">Buy (Level <span id="lvl1">0</span>)</button>
+  </div>
+  <div class="upgrade" id="up2">
+    <strong>Auto Clicker</strong><br>Cost: <span id="cost2">500</span><br>
+    <button onclick="buy(2)">Buy (Level <span id="lvl2">0</span>)</button>
+  </div>
+  <div class="upgrade" id="up3">
+    <strong>Mega Multiplier x10</strong><br>Cost: <span id="cost3">5000</span><br>
+    <button onclick="buy(3)">Buy (Level <span id="lvl3">0</span>)</button>
+  </div>
+  <div class="upgrade" id="up4">
+    <strong>Auto Buyer (buys best upgrade)</strong><br>Cost: <span id="cost4">50000</span><br>
+    <button onclick="buy(4)">Buy (Level <span id="lvl4">0</span>)</button>
+  </div>
+</div>
+
+<script>
+let clicks = 0;
+let multiplier = 1;
+let autoCPS = 0;
+let autoBuyer = 0;
+
+const upgrades = [
+  { cost: 100, increase: () => multiplier *= 2, lvl: 0, baseCost: 100 },
+  { cost: 500, increase: () => autoCPS += 1, lvl: 0, baseCost: 500 },
+  { cost: 5000, increase: () => multiplier *= 10, lvl: 0, baseCost: 5000 },
+  { cost: 50000, increase: () => autoBuyer += 1, lvl: 0, baseCost: 50000 }
+];
+
+function click() {
+  clicks += multiplier;
+  update();
+}
+
+function buy(id) {
+  const u = upgrades[id-1];
+  if (clicks >= u.cost) {
+    clicks -= u.cost;
+    u.lvl++;
+    u.cost = Math.floor(u.baseCost * Math.pow(1.5, u.lvl));
+    u.increase();
+    update();
+  }
+}
+
+function autoBuy() {
+  if (autoBuyer <= 0) return;
+  for (let i = 0; i < upgrades.length; i++) {
+    const u = upgrades[i];
+    if (clicks >= u.cost) {
+      buy(i+1);
+      break;
+    }
+  }
+}
+
+function update() {
+  document.getElementById("clicks").innerText = clicks.toLocaleString();
+  document.getElementById("cps").innerText = autoCPS;
+  for (let i = 1; i <= 4; i++) {
+    const u = upgrades[i-1];
+    document.getElementById("cost"+i).innerText = u.cost.toLocaleString();
+    document.getElementById("lvl"+i).innerText = u.lvl;
+    const btn = document.querySelector(`#up${i} button`);
+    btn.disabled = clicks < u.cost;
+    btn.parentElement.classList.toggle("locked", clicks < u.cost);
+  }
+}
+
+setInterval(() => {
+  clicks += autoCPS;
+  if (Math.random() < autoBuyer * 0.1) autoBuy(); // auto-buyer activates ~10 times/sec per level
+  update();
+}, 1000);
+
+update();
+</script>
+</body>
+</html>
